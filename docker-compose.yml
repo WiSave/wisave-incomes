@@ -1,0 +1,12 @@
+services:
+  wisave-incomes:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5300:8080"
+
+networks:
+  default:
+    external: true
+    name: wisave-net
