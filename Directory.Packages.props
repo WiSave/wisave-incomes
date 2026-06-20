@@ -1,0 +1,31 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <NoWarn>$(NoWarn);NU1507</NoWarn>
+    <RestoreNoWarn>$(RestoreNoWarn);NU1507</RestoreNoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
+    <PackageVersion Include="dbup-postgresql" Version="7.0.1" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
+    <PackageVersion Include="Nerdbank.GitVersioning" Version="3.9.50" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.16.3" />
+    <PackageVersion Include="WiSave.Console" Version="1.0.0" />
+    <PackageVersion Include="WiSave.Framework.Application" Version="1.0.4" />
+    <PackageVersion Include="WiSave.Framework.Domain" Version="1.0.4" />
+    <PackageVersion Include="WiSave.Framework.EventSourcing" Version="1.0.4" />
+    <PackageVersion Include="WiSave.Framework.EventSourcing.Marten" Version="1.0.4" />
+    <PackageVersion Include="WolverineFx.RabbitMQ" Version="6.10.0" />
+    <PackageVersion Include="WolverineFx.RuntimeCompilation" Version="6.10.0" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+  </ItemGroup>
+</Project>

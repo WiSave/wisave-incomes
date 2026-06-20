@@ -1,12 +1,106 @@
 services:
-  wisave-incomes:
+  wisave-incomes-webapi:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.WebApi
+      secrets:
+        - nuget_config
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - default
+      - wisave-net
+    environment:
+      - ConnectionStrings__Postgres=Host=postgres;Database=wisave_incomes;Username=wisave;Password=wisave_dev
+      - RabbitMq__Host=rabbitmq
+      - RabbitMq__VirtualHost=incomes
+      - RabbitMq__Username=guest
+      - RabbitMq__Password=guest
+
+  worker-domain:
+    build:
+      context: .
+      dockerfile: Dockerfile.Worker.Domain
+      secrets:
+        - nuget_config
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eventstore-postgres:
+        condition: service_healthy
+    environment:
+      - ConnectionStrings__Postgres=Host=postgres;Database=wisave_incomes;Username=wisave;Password=wisave_dev
+      - ConnectionStrings__EventStore=Host=eventstore-postgres;Database=wisave_incomes_events;Username=wisave;Password=wisave_dev
+      - RabbitMq__Host=rabbitmq
+      - RabbitMq__VirtualHost=incomes
+      - RabbitMq__Username=guest
+      - RabbitMq__Password=guest
+    networks:
+      - default
+      - wisave-net
+
+  worker-projections:
+    build:
+      context: .
+      dockerfile: Dockerfile.Worker.Projections
+      secrets:
+        - nuget_config
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - ConnectionStrings__Postgres=Host=postgres;Database=wisave_incomes;Username=wisave;Password=wisave_dev
+      - RabbitMq__Host=rabbitmq
+      - RabbitMq__VirtualHost=incomes
+      - RabbitMq__Username=guest
+      - RabbitMq__Password=guest
+    networks:
+      - default
+      - wisave-net
+
+  postgres:
+    image: postgres:17
     ports:
-      - "5300:8080"
+      - "5434:5432"
+    environment:
+      - POSTGRES_DB=wisave_incomes
+      - POSTGRES_USER=wisave
+      - POSTGRES_PASSWORD=wisave_dev
+    volumes:
+      - incomes-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wisave -d wisave_incomes"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  eventstore-postgres:
+    image: postgres:17
+    ports:
+      - "5436:5432"
+    environment:
+      - POSTGRES_DB=wisave_incomes_events
+      - POSTGRES_USER=wisave
+      - POSTGRES_PASSWORD=wisave_dev
+    volumes:
+      - incomes-eventstore-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wisave -d wisave_incomes_events"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  incomes-db:
+  incomes-eventstore-db:
 
 networks:
   default:
+  wisave-net:
     external: true
     name: wisave-net
+
+secrets:
+  nuget_config:
+    file: ${HOME}/.nuget/NuGet/NuGet.Config

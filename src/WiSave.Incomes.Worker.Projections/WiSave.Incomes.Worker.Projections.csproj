@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <UserSecretsId>dotnet-WiSave.Incomes.Worker.Projections-2d615f70-9f46-4f6e-a75d-a4ae9108ee21</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WiSave.Incomes.Contracts\WiSave.Incomes.Contracts.csproj" />
+    <ProjectReference Include="..\WiSave.Incomes.Core.Infrastructure\WiSave.Incomes.Core.Infrastructure.csproj" />
+    <ProjectReference Include="..\WiSave.Incomes.Projections\WiSave.Incomes.Projections.csproj" />
+  </ItemGroup>
+</Project>

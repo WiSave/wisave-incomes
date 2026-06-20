@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\WiSave.Incomes.Contracts\WiSave.Incomes.Contracts.csproj" />
+    <ProjectReference Include="..\WiSave.Incomes.Core.Domain\WiSave.Incomes.Core.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WiSave.Framework.Application" />
+  </ItemGroup>
+
+</Project>
