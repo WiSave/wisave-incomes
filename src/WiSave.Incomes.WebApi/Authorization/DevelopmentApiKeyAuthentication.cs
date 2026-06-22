@@ -14,7 +14,16 @@ public sealed class DevelopmentApiKeyAuthentication(
         && TryGetHeaderValue(out var value)
         && StringComparer.Ordinal.Equals(value, ApiKey);
 
-    public string UserId => configuration["DevelopmentApiKey:UserId"] ?? "development-user";
+    public Guid UserId
+    {
+        get
+        {
+            var value = configuration["DevelopmentApiKey:UserId"] ?? "018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234";
+            return Guid.TryParse(value, out var userId)
+                ? userId
+                : throw new InvalidOperationException("DevelopmentApiKey:UserId must be a valid GUID.");
+        }
+    }
 
     public string Email => configuration["DevelopmentApiKey:Email"] ?? "development@wisave.local";
 

@@ -8,8 +8,7 @@ public sealed class PermissionContext(
 
     public IReadOnlySet<string> Permissions => _permissions ??= ParsePermissions();
 
-    public bool HasUserId => developmentApiKey.IsAuthorized
-        || !string.IsNullOrEmpty(httpContextAccessor.HttpContext?.Request.Headers["X-User-Id"].FirstOrDefault());
+    public bool HasUserId => developmentApiKey.IsAuthorized || HasValidUserIdHeader();
 
     public bool HasPermission(string permission) =>
         developmentApiKey.IsAuthorized || Permissions.Contains("*") || Permissions.Contains(permission);
@@ -24,5 +23,11 @@ public sealed class PermissionContext(
 
         return header.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private bool HasValidUserIdHeader()
+    {
+        var value = httpContextAccessor.HttpContext?.Request.Headers["X-User-Id"].FirstOrDefault();
+        return Guid.TryParse(value, out _);
     }
 }

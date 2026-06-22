@@ -10,15 +10,19 @@ using WiSave.Incomes.WebApi.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<IncomesDbContext>(opts => opts.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")!));
+builder.Services.AddDbContext<IncomesDbContext>(opts => opts.UseNpgsql(builder.Configuration.GetConnectionString("General")!));
 
 builder.Services
     .AddHttpContextAccessor()
     .AddScoped<DevelopmentApiKeyAuthentication>()
     .AddScoped<ICurrentUser, HeaderOrDevelopmentCurrentUser>()
     .AddScoped<PermissionContext>()
-    .AddJson()
-    .AddOpenApi(options => { options.AddDocumentTransformer<DevelopmentApiKeySecurityTransformer>(); } );
+    .AddJson();
+
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer<DevelopmentApiKeySecurityTransformer>();
+});
 
 builder.AddIncomesWolverine();
 

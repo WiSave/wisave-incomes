@@ -5,7 +5,7 @@ using WiSave.Incomes.Worker.Projections.Handlers;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-var postgresCs = builder.Configuration.GetConnectionString("Postgres")!;
+var postgresCs = builder.Configuration.GetConnectionString("Projections")!;
 
 builder.Services.AddDbContext<ProjectionsDbContext>(opts => opts.UseNpgsql(postgresCs));
 

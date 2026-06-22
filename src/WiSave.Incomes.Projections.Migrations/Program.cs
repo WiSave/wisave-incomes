@@ -13,13 +13,13 @@ public static class Program
             var connectionString = args.FirstOrDefault(a => !a.StartsWith("--", StringComparison.Ordinal));
             if (string.IsNullOrWhiteSpace(connectionString))
             {
-                connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Incomes");
+                connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Projections");
             }
 
             if (string.IsNullOrWhiteSpace(connectionString))
             {
                 Console.Error.WriteLine(
-                    "Connection string not provided. Pass it as the first argument or set ConnectionStrings__Incomes.");
+                    "Connection string not provided. Pass it as the first argument or set ConnectionStrings__Projections.");
                 return 1;
             }
 

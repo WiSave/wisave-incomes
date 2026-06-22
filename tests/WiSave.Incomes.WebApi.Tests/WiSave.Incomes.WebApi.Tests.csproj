@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
@@ -20,6 +21,7 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\..\src\WiSave.Incomes.Core.Infrastructure\WiSave.Incomes.Core.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\WiSave.Incomes.WebApi\WiSave.Incomes.WebApi.csproj" />
   </ItemGroup>
 
