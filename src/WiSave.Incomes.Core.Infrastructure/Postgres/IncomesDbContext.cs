@@ -5,21 +5,33 @@ namespace WiSave.Incomes.Core.Infrastructure.Postgres;
 
 public sealed class IncomesDbContext(DbContextOptions<IncomesDbContext> options) : DbContext(options)
 {
-    public DbSet<IncomeSourceEntity> IncomeSources => Set<IncomeSourceEntity>();
+    public DbSet<CategoryEntity> Categories => Set<CategoryEntity>();
+    public DbSet<SubcategoryEntity> Subcategories => Set<SubcategoryEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("config");
 
-        modelBuilder.Entity<IncomeSourceEntity>(e =>
+        modelBuilder.Entity<CategoryEntity>(e =>
         {
-            e.ToTable("income_sources");
+            e.ToTable("categories");
             e.HasKey(x => x.Id);
-            e.Property(x => x.Id).HasMaxLength(64);
-            e.Property(x => x.UserId).HasMaxLength(64).IsRequired();
             e.Property(x => x.Name).HasMaxLength(200).IsRequired();
             e.Property(x => x.SortOrder).HasDefaultValue(0);
             e.HasIndex(x => x.UserId);
+            e.HasMany(x => x.Subcategories)
+                .WithOne(x => x.Category)
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SubcategoryEntity>(e =>
+        {
+            e.ToTable("subcategories");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            e.Property(x => x.SortOrder).HasDefaultValue(0);
+            e.HasIndex(x => x.CategoryId);
         });
     }
 }

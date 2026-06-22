@@ -9,6 +9,7 @@ internal sealed record MigrationRunResult(string Scope, IReadOnlyList<string> Ap
 internal interface IScopedDatabaseMigrator
 {
     string Scope { get; }
+    string ConnectionStringName { get; }
 
     Task<MigrationRunResult> RunAsync(string connectionString, CancellationToken ct);
 }
@@ -16,6 +17,7 @@ internal interface IScopedDatabaseMigrator
 internal sealed class CoreDatabaseMigrator : IScopedDatabaseMigrator
 {
     public string Scope => "Core";
+    public string ConnectionStringName => "General";
 
     public Task<MigrationRunResult> RunAsync(string connectionString, CancellationToken ct)
     {
@@ -39,6 +41,7 @@ internal sealed class CoreDatabaseMigrator : IScopedDatabaseMigrator
 internal sealed class ProjectionsDatabaseMigrator : IScopedDatabaseMigrator
 {
     public string Scope => "Projections";
+    public string ConnectionStringName => "Projections";
 
     public Task<MigrationRunResult> RunAsync(string connectionString, CancellationToken ct)
     {

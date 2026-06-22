@@ -18,21 +18,10 @@ internal sealed class DatabaseMigrationOperations(
     {
         ct.ThrowIfCancellationRequested();
 
-        var effectiveConnectionString = NormalizeConnectionString(connectionString);
-        if (string.IsNullOrWhiteSpace(effectiveConnectionString))
-        {
-            effectiveConnectionString = NormalizeConnectionString(configuration.GetConnectionString("Postgres"));
-        }
-
-        if (string.IsNullOrWhiteSpace(effectiveConnectionString))
-        {
-            throw new InvalidOperationException(
-                "Postgres connection string was not configured. Set ConnectionStrings__Postgres or appsettings.json.");
-        }
-
         var results = new List<MigrationRunResult>();
         foreach (var migrator in migrators)
         {
+            var effectiveConnectionString = ResolveConnectionString(connectionString, migrator.ConnectionStringName);
             consoleOutput.WriteLine($"Applying {migrator.Scope} migrations...");
             results.Add(await migrator.RunAsync(effectiveConnectionString, ct));
         }
@@ -56,6 +45,23 @@ internal sealed class DatabaseMigrationOperations(
         }
 
         return trimmed;
+    }
+
+    private string ResolveConnectionString(string? overrideConnectionString, string connectionStringName)
+    {
+        var effectiveConnectionString = NormalizeConnectionString(overrideConnectionString);
+        if (string.IsNullOrWhiteSpace(effectiveConnectionString))
+        {
+            effectiveConnectionString = NormalizeConnectionString(configuration.GetConnectionString(connectionStringName));
+        }
+
+        if (string.IsNullOrWhiteSpace(effectiveConnectionString))
+        {
+            throw new InvalidOperationException(
+                $"Postgres connection string '{connectionStringName}' was not configured. Set ConnectionStrings__{connectionStringName} or appsettings.json.");
+        }
+
+        return effectiveConnectionString;
     }
 
     private static string FormatSuccessMessage(IReadOnlyList<MigrationRunResult> results)

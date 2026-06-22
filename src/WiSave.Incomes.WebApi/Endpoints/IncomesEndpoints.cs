@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using WiSave.Incomes.Contracts.Commands;
-using WiSave.Incomes.WebApi.Authorization;
-using Wolverine;
+using WiSave.Incomes.WebApi.Requests.Incomes;
 
 namespace WiSave.Incomes.WebApi.Endpoints;
 
@@ -11,12 +10,20 @@ public sealed class IncomesEndpoints : IEndpointModule
     {
         var group = app.MapGroup("/incomes").WithTags("Incomes");
 
-        group.MapPost("/", Create).RequirePermission(Permissions.Incomes.Write);
+        group.MapGet("/", GetAll);
+        group.MapPost("/", Create);
+        group.MapGet("/{id:guid}", GetById);
+        group.MapPut("/{id:guid}", Update);
+        group.MapDelete("/{id:guid}", Delete);
     }
 
-    private static async Task<IResult> Create([FromBody] CreateIncomeCommand command, [FromServices] IMessageBus bus)
-    {
-        await bus.PublishAsync(command);
-        return Results.Accepted();
-    }
+    private static IResult GetAll() => Results.StatusCode(200);
+
+    private static IResult Create([FromBody] CreateIncomeCommand request) => Results.StatusCode(200);
+
+    private static IResult GetById(Guid id) => Results.StatusCode(200);
+
+    private static IResult Update(Guid id, [FromBody] UpdateIncomeRequest request) => Results.StatusCode(200);
+
+    private static IResult Delete(Guid id) => Results.StatusCode(200);
 }

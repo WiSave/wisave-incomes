@@ -36,13 +36,13 @@ internal sealed class ProjectionClearOperations(
         var effectiveConnectionString = NormalizeConnectionString(connectionString);
         if (string.IsNullOrWhiteSpace(effectiveConnectionString))
         {
-            effectiveConnectionString = NormalizeConnectionString(configuration.GetConnectionString("Postgres"));
+            effectiveConnectionString = NormalizeConnectionString(configuration.GetConnectionString("Projections"));
         }
 
         if (string.IsNullOrWhiteSpace(effectiveConnectionString))
         {
             throw new InvalidOperationException(
-                "Postgres connection string was not configured. Set ConnectionStrings__Postgres or appsettings.json.");
+                "Projections connection string was not configured. Set ConnectionStrings__Projections or appsettings.json.");
         }
 
         var tableNames = await client.ListBaseTablesAsync(effectiveConnectionString, SchemaName, ct);

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\WiSave.Incomes.Contracts\WiSave.Incomes.Contracts.csproj" />
@@ -21,6 +21,10 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Postgres\Migrations\" />
   </ItemGroup>
 
 </Project>

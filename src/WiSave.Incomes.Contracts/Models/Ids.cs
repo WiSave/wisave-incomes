@@ -1,9 +1,9 @@
 namespace WiSave.Incomes.Contracts.Models;
 
-public sealed record UserId(string Value)
+public sealed record UserId(Guid Value)
 {
-    public static explicit operator string(UserId id) => id.Value;
-    public static explicit operator UserId(string value) => new(value);
+    public static explicit operator Guid(UserId id) => id.Value;
+    public static explicit operator UserId(Guid value) => new(value);
 }
 
 public sealed record IncomeId(Guid Value)

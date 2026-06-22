@@ -9,11 +9,15 @@ namespace WiSave.Incomes.Core.Infrastructure.Messaging;
 
 public static class WolverineExtensions
 {
+    public static IServiceCollection AddIncomesEventPublishing(this IServiceCollection services)
+    {
+        services.AddScoped<IEventPublisher, WolverineEventPublisher>();
+        return services;
+    }
+
     public static IHostApplicationBuilder AddIncomesWolverine(this IHostApplicationBuilder builder, Action<WolverineOptions>? configure = null)
     {
         var rabbitMq = RabbitMqSettings.FromConfiguration(builder.Configuration);
-
-        builder.Services.AddScoped<IEventPublisher, WolverineEventPublisher>();
 
         builder.UseWolverine(options =>
         {

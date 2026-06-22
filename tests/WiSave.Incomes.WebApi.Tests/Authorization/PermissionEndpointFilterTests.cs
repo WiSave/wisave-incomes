@@ -43,7 +43,7 @@ public class PermissionEndpointFilterTests : IAsyncLifetime
     public async Task Request_with_required_permission_returns_ok()
     {
         var request = new HttpRequestMessage(HttpMethod.Get, "/test");
-        request.Headers.Add("X-User-Id", "user-1");
+        request.Headers.Add("X-User-Id", "018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234");
         request.Headers.Add("X-User-Permissions", Permissions.Incomes.Read);
 
         var response = await _client.SendAsync(request);
@@ -55,7 +55,7 @@ public class PermissionEndpointFilterTests : IAsyncLifetime
     public async Task Request_without_required_permission_returns_forbidden()
     {
         var request = new HttpRequestMessage(HttpMethod.Get, "/test");
-        request.Headers.Add("X-User-Id", "user-1");
+        request.Headers.Add("X-User-Id", "018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234");
         request.Headers.Add("X-User-Permissions", "other:read");
 
         var response = await _client.SendAsync(request);
