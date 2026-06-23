@@ -1,0 +1,49 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [master]
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  SOLUTION: WiSave.Incomes.slnx
+  CONFIGURATION: Release
+
+jobs:
+  validate:
+    name: Test and audit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Authenticate GitHub Packages
+        run: dotnet nuget update source wisave --configfile NuGet.config --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }} --configfile NuGet.config
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION }} -c ${{ env.CONFIGURATION }} --no-restore
+
+      - name: Run unit tests
+        run: dotnet test ${{ env.SOLUTION }} -c ${{ env.CONFIGURATION }} --no-build --verbosity normal
+
+      - name: Audit NuGet vulnerabilities
+        run: dotnet list ${{ env.SOLUTION }} package --vulnerable --include-transitive --configfile NuGet.config
+
+      - name: Audit NuGet updates
+        run: dotnet list ${{ env.SOLUTION }} package --outdated --include-transitive --configfile NuGet.config
+
+      - name: Enforce NuGet vulnerability policy
+        run: dotnet restore ${{ env.SOLUTION }} --configfile NuGet.config -p:NuGetAudit=true -p:NuGetAuditMode=all -p:NuGetAuditLevel=moderate '-p:WarningsAsErrors=NU1902;NU1903;NU1904'
