@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using WiSave.Incomes.Contracts.Commands;
+using WiSave.Incomes.Core.Infrastructure.Identity;
 using WiSave.Incomes.WebApi.Requests.Incomes;
+using Wolverine;
 
 namespace WiSave.Incomes.WebApi.Endpoints;
 
@@ -19,7 +21,21 @@ public sealed class IncomesEndpoints : IEndpointModule
 
     private static IResult GetAll() => Results.StatusCode(200);
 
-    private static IResult Create([FromBody] CreateIncomeCommand request) => Results.StatusCode(200);
+    private static async Task<IResult> Create([FromBody] CreateIncomeRequest request, ICurrentUser user, IMessageBus bus)
+    {
+        var @command = new CreateIncomeCommand(
+            request.Amount,
+            request.IncomeDate,
+            request.Name,
+            request.Description,
+            user.UserId,
+            request.CategoryId,
+            request.SubcategoryId,
+            request.Tags);
+
+        await bus.SendAsync(@command);
+        return Results.StatusCode(200);
+    }
 
     private static IResult GetById(Guid id) => Results.StatusCode(200);
 

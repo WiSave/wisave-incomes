@@ -12,6 +12,8 @@ public sealed class Income : AggregateRoot<IncomeId>
     public string? Description { get; private set; }
     public Guid UserId { get; private set; }
     public IReadOnlyCollection<string> Tags { get; private set; } = [];
+    public Guid? CategoryId { get; private set; }
+    public Guid? SubcategoryId { get; private set; }
 
     public static Income Create(
         IncomeId id,
@@ -20,7 +22,9 @@ public sealed class Income : AggregateRoot<IncomeId>
         string name,
         string? description,
         Guid userId,
-        IReadOnlyCollection<string> tags)
+        IReadOnlyCollection<string> tags,
+        Guid? categoryId,
+        Guid? subcategoryId)
     {
         var income = new Income();
         income.RaiseEvent(new IncomeCreated(
@@ -30,7 +34,9 @@ public sealed class Income : AggregateRoot<IncomeId>
             name,
             description,
             userId,
-            tags.ToArray()));
+            tags.ToArray(),
+            categoryId,
+            subcategoryId));
 
         return income;
     }
@@ -44,5 +50,7 @@ public sealed class Income : AggregateRoot<IncomeId>
         Description = e.Description;
         UserId = e.UserId;
         Tags = e.Tags.ToArray();
+        CategoryId = e.CategoryId;
+        SubcategoryId = e.SubcategoryId;
     }
 }

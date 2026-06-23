@@ -23,6 +23,8 @@ public class CreateIncomeCommandHandlerTests
             "Salary",
             "June salary",
             Guid.Parse("018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234"),
+            Guid.Parse("11111111-1111-1111-1111-111111111111"),
+            Guid.Parse("22222222-2222-2222-2222-222222222222"),
             ["salary", "work"]);
 
         await handler.Handle(command, CancellationToken.None);
@@ -36,6 +38,8 @@ public class CreateIncomeCommandHandlerTests
         Assert.Equal(command.Name, saved.Name);
         Assert.Equal(command.Description, saved.Description);
         Assert.Equal(command.UserId, saved.UserId);
+        Assert.Equal(command.CategoryId, saved.CategoryId);
+        Assert.Equal(command.SubcategoryId, saved.SubcategoryId);
         Assert.Equal(command.Tags, saved.Tags);
 
         var published = Assert.IsType<IncomeCreated>(Assert.Single(publisher.Published));
@@ -45,6 +49,8 @@ public class CreateIncomeCommandHandlerTests
         Assert.Equal(command.Name, published.Name);
         Assert.Equal(command.Description, published.Description);
         Assert.Equal(command.UserId, published.UserId);
+        Assert.Equal(command.CategoryId, published.CategoryId);
+        Assert.Equal(command.SubcategoryId, published.SubcategoryId);
         Assert.Equal(command.Tags, published.Tags);
     }
 

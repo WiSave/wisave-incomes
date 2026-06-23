@@ -1,9 +1,12 @@
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using WiSave.Incomes.Core.Application.Abstractions;
+using WiSave.Incomes.Core.Infrastructure.Postgres;
 using Wolverine;
 using Wolverine.RabbitMQ;
+using Wolverine.Transports;
 
 namespace WiSave.Incomes.Core.Infrastructure.Messaging;
 
@@ -21,6 +24,8 @@ public static class WolverineExtensions
 
         builder.UseWolverine(options =>
         {
+            options.CodeGeneration.AlwaysUseServiceLocationFor<DbContextOptions<IncomesDbContext>>();
+
             options.UseRabbitMq(rabbit =>
                 {
                     rabbit.HostName = rabbitMq.Host;
@@ -30,7 +35,7 @@ public static class WolverineExtensions
                 })
                 .EnableEnhancedDeadLettering()
                 .AutoProvision()
-                .UseConventionalRouting();
+                .UseConventionalRouting(NamingSource.FromHandlerType);
 
             configure?.Invoke(options);
         });
