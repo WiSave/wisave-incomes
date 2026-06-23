@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Routing;
 using WiSave.Incomes.Contracts.Commands;
+using WiSave.Incomes.Contracts.Requests;
+using WiSave.Incomes.Contracts.Responses;
 using WiSave.Incomes.Core.Infrastructure.Identity;
 using WiSave.Incomes.WebApi.Endpoints;
 using WiSave.Incomes.WebApi.Requests.Categories;
@@ -57,7 +59,6 @@ public class CategoryEndpointsTests : IAsyncLifetime
             new EndpointCase(HttpMethod.Get, "/incomes/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234"),
             new EndpointCase(HttpMethod.Put, "/incomes/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234", """{"amount":{"amount":100,"currency":0},"incomeDate":"2026-06-21","name":"Salary","description":null,"tags":[]}"""),
             new EndpointCase(HttpMethod.Delete, "/incomes/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234"),
-            new EndpointCase(HttpMethod.Get, "/incomes/categories"),
             new EndpointCase(
                 HttpMethod.Post,
                 "/incomes/categories",
@@ -65,7 +66,11 @@ public class CategoryEndpointsTests : IAsyncLifetime
                 HttpStatusCode.Created),
             new EndpointCase(HttpMethod.Put, "/incomes/categories/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234", """{"name":"Salary"}"""),
             new EndpointCase(HttpMethod.Delete, "/incomes/categories/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234"),
-            new EndpointCase(HttpMethod.Post, "/incomes/categories/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234/subcategories", """{"name":"Base pay"}"""),
+            new EndpointCase(
+                HttpMethod.Post,
+                "/incomes/categories/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234/subcategories",
+                """{"name":"Base pay"}""",
+                HttpStatusCode.Created),
             new EndpointCase(HttpMethod.Delete, "/incomes/categories/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234/subcategories/118f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234"),
         };
 
@@ -77,6 +82,64 @@ public class CategoryEndpointsTests : IAsyncLifetime
             Assert.Equal(endpointCase.ExpectedStatus, response.StatusCode);
             Assert.Empty(await response.Content.ReadAsStringAsync());
         }
+    }
+
+    [Fact]
+    public async Task CreateIncome_sends_create_income_command_with_category_references()
+    {
+        var categoryId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var subcategoryId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+        using var request = CreateRequest(new EndpointCase(
+            HttpMethod.Post,
+            "/incomes",
+            $$"""
+              {
+                "amount":{"amount":12000,"currency":0},
+                "incomeDate":"2026-06-23",
+                "name":"Salary",
+                "description":null,
+                "categoryId":"{{categoryId}}",
+                "subcategoryId":"{{subcategoryId}}",
+                "tags":["Job","Monthly salary"]
+              }
+              """));
+
+        using var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var bus = _app.Services.GetRequiredService<CapturingMessageBus>();
+        var command = Assert.IsType<CreateIncomeCommand>(bus.Sent);
+        Assert.Equal(categoryId, command.CategoryId);
+        Assert.Equal(subcategoryId, command.SubcategoryId);
+        Assert.Equal(Guid.Parse("118f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234"), command.UserId);
+        Assert.Equal(["Job", "Monthly salary"], command.Tags);
+    }
+
+    [Fact]
+    public async Task GetCategories_sends_request_and_returns_projection_response()
+    {
+        var categoryId = Guid.Parse("218f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234");
+        var subcategoryId = Guid.Parse("318f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234");
+        var bus = _app.Services.GetRequiredService<CapturingMessageBus>();
+        bus.CategoriesResponse = new GetCategoriesResponse([
+            new CategoryResponse(
+                categoryId,
+                "Salary",
+                1,
+                [
+                    new SubcategoryResponse(subcategoryId, "Base pay", 2)
+                ])
+        ]);
+
+        using var response = await _client.GetAsync("/incomes/categories");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var request = Assert.IsType<GetCategoriesRequest>(bus.Invoked);
+        Assert.Equal(Guid.Parse("118f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234"), request.UserId);
+        Assert.Equal(typeof(GetCategoriesResponse), bus.InvokeOptions?.ResponseType);
+        var json = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Salary", json);
+        Assert.Contains("Base pay", json);
     }
 
     [Fact]
@@ -100,8 +163,83 @@ public class CategoryEndpointsTests : IAsyncLifetime
         Assert.EndsWith($"/incomes/categories/{command.Id}", response.Headers.Location?.OriginalString);
     }
 
+    [Fact]
+    public async Task UpdateCategory_sends_update_category_command()
+    {
+        var categoryId = Guid.Parse("218f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234");
+        using var request = CreateRequest(new EndpointCase(
+            HttpMethod.Put,
+            $"/incomes/categories/{categoryId}",
+            """{"name":"Salary","sortOrder":4}"""));
+
+        using var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Empty(await response.Content.ReadAsStringAsync());
+        var bus = _app.Services.GetRequiredService<CapturingMessageBus>();
+        var command = Assert.IsType<UpdateCategory>(bus.Sent);
+        Assert.Equal(categoryId, command.Id);
+        Assert.Equal(Guid.Parse("118f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234"), command.UserId);
+        Assert.Equal("Salary", command.Name);
+        Assert.Equal(4, command.SortOrder);
+    }
+
+    [Fact]
+    public async Task DeleteCategory_sends_delete_category_command()
+    {
+        var categoryId = Guid.Parse("218f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234");
+
+        using var response = await _client.DeleteAsync($"/incomes/categories/{categoryId}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Empty(await response.Content.ReadAsStringAsync());
+        var bus = _app.Services.GetRequiredService<CapturingMessageBus>();
+        var command = Assert.IsType<DeleteCategory>(bus.Sent);
+        Assert.Equal(categoryId, command.Id);
+        Assert.Equal(Guid.Parse("118f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234"), command.UserId);
+    }
+
+    [Fact]
+    public async Task CreateSubcategory_sends_create_subcategory_command()
+    {
+        var categoryId = Guid.Parse("218f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234");
+        using var request = CreateRequest(new EndpointCase(
+            HttpMethod.Post,
+            $"/incomes/categories/{categoryId}/subcategories",
+            """{"name":"Base pay","sortOrder":2}"""));
+
+        using var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var bus = _app.Services.GetRequiredService<CapturingMessageBus>();
+        var command = Assert.IsType<CreateSubcategory>(bus.Sent);
+        Assert.NotEqual(Guid.Empty, command.Id);
+        Assert.Equal(categoryId, command.CategoryId);
+        Assert.Equal(Guid.Parse("118f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234"), command.UserId);
+        Assert.Equal("Base pay", command.Name);
+        Assert.Equal(2, command.SortOrder);
+        Assert.EndsWith($"/incomes/categories/{categoryId}/subcategories/{command.Id}", response.Headers.Location?.OriginalString);
+    }
+
+    [Fact]
+    public async Task DeleteSubcategory_sends_delete_subcategory_command()
+    {
+        var categoryId = Guid.Parse("218f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234");
+        var subcategoryId = Guid.Parse("318f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234");
+
+        using var response = await _client.DeleteAsync($"/incomes/categories/{categoryId}/subcategories/{subcategoryId}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Empty(await response.Content.ReadAsStringAsync());
+        var bus = _app.Services.GetRequiredService<CapturingMessageBus>();
+        var command = Assert.IsType<DeleteSubcategory>(bus.Sent);
+        Assert.Equal(categoryId, command.CategoryId);
+        Assert.Equal(subcategoryId, command.Id);
+        Assert.Equal(Guid.Parse("118f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234"), command.UserId);
+    }
+
     [Theory]
-    [InlineData("POST", "/incomes", typeof(CreateIncomeCommand))]
+    [InlineData("POST", "/incomes", typeof(CreateIncomeRequest))]
     [InlineData("PUT", "/incomes/{id:guid}", typeof(UpdateIncomeRequest))]
     [InlineData("POST", "/incomes/categories", typeof(CreateCategoryRequest))]
     [InlineData("PUT", "/incomes/categories/{id:guid}", typeof(UpdateCategoryRequest))]
@@ -162,6 +300,12 @@ public class CategoryEndpointsTests : IAsyncLifetime
 
     private sealed class CapturingMessageBus : IMessageBus
     {
+        public GetCategoriesResponse CategoriesResponse { get; set; } = new([]);
+
+        public object? Invoked { get; private set; }
+
+        public DeliveryOptions? InvokeOptions { get; private set; }
+
         public object? Sent { get; private set; }
 
         public object? Published { get; private set; }
@@ -199,6 +343,14 @@ public class CategoryEndpointsTests : IAsyncLifetime
             CancellationToken cancellation = default,
             TimeSpan? timeout = null)
         {
+            Invoked = message;
+            InvokeOptions = options;
+
+            if (typeof(T) == typeof(GetCategoriesResponse))
+            {
+                return Task.FromResult((T)(object)CategoriesResponse);
+            }
+
             return Task.FromResult(default(T)!);
         }
 

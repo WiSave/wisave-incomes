@@ -2,7 +2,7 @@ using WiSave.Incomes.Contracts.Models;
 
 namespace WiSave.Incomes.WebApi.Requests.Incomes;
 
-public sealed record UpdateIncomeRequest(
+public sealed record CreateIncomeRequest(
     Money Amount,
     DateOnly IncomeDate,
     string Name,

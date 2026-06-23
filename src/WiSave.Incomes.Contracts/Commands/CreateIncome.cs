@@ -8,4 +8,6 @@ public sealed record CreateIncomeCommand(
     string Name,
     string? Description,
     Guid UserId,
+    Guid? CategoryId,
+    Guid? SubcategoryId,
     IReadOnlyCollection<string> Tags);

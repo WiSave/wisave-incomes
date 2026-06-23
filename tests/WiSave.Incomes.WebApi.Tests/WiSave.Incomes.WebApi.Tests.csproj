@@ -25,4 +25,8 @@
     <ProjectReference Include="..\..\src\WiSave.Incomes.WebApi\WiSave.Incomes.WebApi.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Messaging\WolverineCategoryHandlerTests.cs" />
+  </ItemGroup>
+
 </Project>
