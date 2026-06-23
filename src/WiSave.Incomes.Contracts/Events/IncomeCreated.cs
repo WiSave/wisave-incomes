@@ -9,4 +9,6 @@ public sealed record IncomeCreated(
     string Name,
     string? Description,
     Guid UserId,
-    IReadOnlyCollection<string> Tags);
+    IReadOnlyCollection<string> Tags,
+    Guid? CategoryId,
+    Guid? SubcategoryId);

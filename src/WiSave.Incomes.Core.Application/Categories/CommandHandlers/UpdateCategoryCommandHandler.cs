@@ -4,21 +4,25 @@ using WiSave.Incomes.Core.Application.Abstractions;
 
 namespace WiSave.Incomes.Core.Application.Categories.CommandHandlers;
 
-public sealed class CreateCategoryCommandHandler(ICategoryRepository repository)
+public sealed class UpdateCategoryCommandHandler(ICategoryRepository repository)
 {
-    public async Task Handle(CreateCategory command,  IEventPublisher eventPublisher, CancellationToken ct = default)
+    public async Task Handle(UpdateCategory command, IEventPublisher eventPublisher, CancellationToken ct = default)
     {
         var sortOrder = command.SortOrder ?? 0;
-
-        await repository.CreateAsync(
+        var updated = await repository.UpdateAsync(
             command.Id,
             command.UserId,
             command.Name,
             sortOrder,
             ct);
 
+        if (!updated)
+        {
+            return;
+        }
+
         await eventPublisher.PublishAsync(
-            new CategoryCreated(
+            new CategoryUpdated(
                 command.Id,
                 command.UserId,
                 command.Name,

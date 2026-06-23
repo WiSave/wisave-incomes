@@ -1,6 +1,6 @@
 using WiSave.Incomes.Contracts.Events;
 
-namespace WiSave.Incomes.Worker.Projections.Handlers;
+namespace WiSave.Incomes.Projections.EventHandlers;
 
 public sealed class IncomeCreatedEventHandler
 {

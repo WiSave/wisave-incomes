@@ -20,7 +20,9 @@ public sealed class CreateIncomeCommandHandler(
             command.Name,
             command.Description,
             command.UserId,
-            command.Tags);
+            command.Tags,
+            command.CategoryId,
+            command.SubcategoryId);
 
         var events = income.GetUncommittedEvents()
             .OfType<IncomeCreated>()
