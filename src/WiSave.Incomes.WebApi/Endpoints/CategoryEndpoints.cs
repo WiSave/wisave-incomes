@@ -21,34 +21,34 @@ public sealed class CategoryEndpoints : IEndpointModule
                 "Returns income categories and subcategories for the current user.");
 
         group.MapPost("/", Create)
-            .ProducesCreated(
+            .ProducesAccepted(
                 "CreateIncomeCategory",
                 "Create an income category",
-                "Creates an income category for the current user and returns its location.");
+                "Accepts an income category creation command for the current user.");
 
         group.MapPut("/{id:guid}", Update)
-            .ProducesOk(
+            .ProducesAccepted(
                 "UpdateIncomeCategory",
                 "Update an income category",
-                "Updates an income category for the current user.");
+                "Accepts an income category update command for the current user.");
 
         group.MapDelete("/{id:guid}", Delete)
-            .ProducesOk(
+            .ProducesAccepted(
                 "DeleteIncomeCategory",
                 "Delete an income category",
-                "Deletes an income category for the current user.");
+                "Accepts an income category deletion command for the current user.");
 
         group.MapPost("/{id:guid}/subcategories", CreateSubcategory)
-            .ProducesCreated(
+            .ProducesAccepted(
                 "CreateIncomeSubcategory",
                 "Create an income subcategory",
-                "Creates an income subcategory for the current user and returns its location.");
+                "Accepts an income subcategory creation command for the current user.");
 
         group.MapDelete("/{id:guid}/subcategories/{subId:guid}", DeleteSubcategory)
-            .ProducesOk(
+            .ProducesAccepted(
                 "DeleteIncomeSubcategory",
                 "Delete an income subcategory",
-                "Deletes an income subcategory for the current user.");
+                "Accepts an income subcategory deletion command for the current user.");
     }
 
     private static async Task<IResult> GetAll(ICurrentUser user, IMessageBus bus, CancellationToken ct)
@@ -65,21 +65,21 @@ public sealed class CategoryEndpoints : IEndpointModule
         var categoryId = Guid.CreateVersion7();
         var @command = new CreateCategory(categoryId, user.UserId, request.Name, request.SortOrder);
         await bus.SendAsync(@command);
-        return Results.Created($"/incomes/categories/{categoryId}", value: null);
+        return Results.Accepted($"/incomes/categories/{categoryId}", value: null);
     }
 
     private static async Task<IResult> Update(Guid id, [FromBody] UpdateCategoryRequest request, ICurrentUser user, IMessageBus bus)
     {
         var @command = new UpdateCategory(id, user.UserId, request.Name, request.SortOrder);
         await bus.SendAsync(@command);
-        return Results.StatusCode(200);
+        return Results.Accepted();
     }
 
     private static async Task<IResult> Delete(Guid id, ICurrentUser user, IMessageBus bus)
     {
         var @command = new DeleteCategory(id, user.UserId);
         await bus.SendAsync(@command);
-        return Results.StatusCode(200);
+        return Results.Accepted();
     }
 
     private static async Task<IResult> CreateSubcategory(
@@ -91,13 +91,13 @@ public sealed class CategoryEndpoints : IEndpointModule
         var subcategoryId = Guid.CreateVersion7();
         var @command = new CreateSubcategory(subcategoryId, id, user.UserId, request.Name, request.SortOrder);
         await bus.SendAsync(@command);
-        return Results.Created($"/incomes/categories/{id}/subcategories/{subcategoryId}", value: null);
+        return Results.Accepted($"/incomes/categories/{id}/subcategories/{subcategoryId}", value: null);
     }
 
     private static async Task<IResult> DeleteSubcategory(Guid id, Guid subId, ICurrentUser user, IMessageBus bus)
     {
         var @command = new DeleteSubcategory(id, subId, user.UserId);
         await bus.SendAsync(@command);
-        return Results.StatusCode(200);
+        return Results.Accepted();
     }
 }

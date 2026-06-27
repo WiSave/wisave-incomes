@@ -19,10 +19,10 @@ public sealed class IncomesEndpoints : IEndpointModule
                 "Returns incomes for the current user.");
 
         group.MapPost("/", Create)
-            .ProducesOk(
+            .ProducesAccepted(
                 "CreateIncome",
                 "Create an income",
-                "Creates an income for the current user.");
+                "Accepts an income creation command for the current user.");
 
         group.MapGet("/{id:guid}", GetById)
             .ProducesOk(
@@ -58,7 +58,7 @@ public sealed class IncomesEndpoints : IEndpointModule
             request.Tags);
 
         await bus.SendAsync(@command);
-        return Results.StatusCode(200);
+        return Results.Accepted();
     }
 
     private static IResult GetById(Guid id) => Results.StatusCode(200);
