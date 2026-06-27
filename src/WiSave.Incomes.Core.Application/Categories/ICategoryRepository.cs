@@ -29,6 +29,14 @@ public interface ICategoryRepository
         int sortOrder,
         CancellationToken ct = default);
 
+    Task<bool> UpdateSubcategoryAsync(
+        Guid categoryId,
+        Guid id,
+        Guid userId,
+        string name,
+        int sortOrder,
+        CancellationToken ct = default);
+
     Task<bool> DeleteSubcategoryAsync(
         Guid categoryId,
         Guid id,

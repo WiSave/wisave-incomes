@@ -72,6 +72,11 @@ public class CategoryEndpointsTests : IAsyncLifetime
                 "/incomes/categories/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234/subcategories",
                 """{"name":"Base pay"}""",
                 HttpStatusCode.Accepted),
+            new EndpointCase(
+                HttpMethod.Put,
+                "/incomes/categories/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234/subcategories/118f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234",
+                """{"name":"Bonus"}""",
+                HttpStatusCode.Accepted),
             new EndpointCase(HttpMethod.Delete, "/incomes/categories/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234/subcategories/118f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234", ExpectedStatus: HttpStatusCode.Accepted),
         };
 
@@ -239,12 +244,36 @@ public class CategoryEndpointsTests : IAsyncLifetime
         Assert.Equal(Guid.Parse("118f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234"), command.UserId);
     }
 
+    [Fact]
+    public async Task UpdateSubcategory_sends_update_subcategory_command()
+    {
+        var categoryId = Guid.Parse("218f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234");
+        var subcategoryId = Guid.Parse("318f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234");
+        using var request = CreateRequest(new EndpointCase(
+            HttpMethod.Put,
+            $"/incomes/categories/{categoryId}/subcategories/{subcategoryId}",
+            """{"name":"Bonus","sortOrder":5}"""));
+
+        using var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        Assert.Empty(await response.Content.ReadAsStringAsync());
+        var bus = _app.Services.GetRequiredService<CapturingMessageBus>();
+        var command = Assert.IsType<UpdateSubcategory>(bus.Sent);
+        Assert.Equal(categoryId, command.CategoryId);
+        Assert.Equal(subcategoryId, command.Id);
+        Assert.Equal(Guid.Parse("118f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234"), command.UserId);
+        Assert.Equal("Bonus", command.Name);
+        Assert.Equal(5, command.SortOrder);
+    }
+
     [Theory]
     [InlineData("POST", "/incomes", typeof(CreateIncomeRequest))]
     [InlineData("PUT", "/incomes/{id:guid}", typeof(UpdateIncomeRequest))]
     [InlineData("POST", "/incomes/categories", typeof(CreateCategoryRequest))]
     [InlineData("PUT", "/incomes/categories/{id:guid}", typeof(UpdateCategoryRequest))]
     [InlineData("POST", "/incomes/categories/{id:guid}/subcategories", typeof(CreateSubcategoryRequest))]
+    [InlineData("PUT", "/incomes/categories/{id:guid}/subcategories/{subId:guid}", typeof(CreateSubcategoryRequest))]
     public void Mutating_endpoints_keep_request_body_contracts(
         string method,
         string routePattern,
@@ -275,6 +304,7 @@ public class CategoryEndpointsTests : IAsyncLifetime
     [InlineData("PUT", "/incomes/categories/{id:guid}", StatusCodes.Status202Accepted, null)]
     [InlineData("DELETE", "/incomes/categories/{id:guid}", StatusCodes.Status202Accepted, null)]
     [InlineData("POST", "/incomes/categories/{id:guid}/subcategories", StatusCodes.Status202Accepted, null)]
+    [InlineData("PUT", "/incomes/categories/{id:guid}/subcategories/{subId:guid}", StatusCodes.Status202Accepted, null)]
     [InlineData("DELETE", "/incomes/categories/{id:guid}/subcategories/{subId:guid}", StatusCodes.Status202Accepted, null)]
     public void Endpoints_document_openapi_response_contracts(
         string method,

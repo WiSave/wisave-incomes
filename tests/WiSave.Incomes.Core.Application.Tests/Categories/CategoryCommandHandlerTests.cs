@@ -91,6 +91,27 @@ public class CategoryCommandHandlerTests
     }
 
     [Fact]
+    public async Task UpdateSubcategory_saves_and_publishes_subcategory_updated()
+    {
+        var operations = new List<string>();
+        var repository = new CapturingCategoryRepository(operations);
+        var publisher = new CapturingEventPublisher(operations);
+        var handler = new UpdateSubcategoryCommandHandler(repository);
+        var command = new UpdateSubcategory(CategoryId, SubcategoryId, UserId, "Bonus", 5);
+
+        await handler.Handle(command, publisher, CancellationToken.None);
+
+        Assert.Equal(["update-subcategory", "publish"], operations);
+        Assert.Equal((CategoryId, SubcategoryId, UserId, "Bonus", 5), repository.UpdatedSubcategory);
+        var published = Assert.IsType<SubcategoryUpdated>(Assert.Single(publisher.Published));
+        Assert.Equal(CategoryId, published.CategoryId);
+        Assert.Equal(SubcategoryId, published.Id);
+        Assert.Equal(UserId, published.UserId);
+        Assert.Equal("Bonus", published.Name);
+        Assert.Equal(5, published.SortOrder);
+    }
+
+    [Fact]
     public async Task UpdateCategory_does_not_publish_when_category_is_not_mutated()
     {
         var operations = new List<string>();
@@ -105,6 +126,21 @@ public class CategoryCommandHandlerTests
         Assert.Empty(publisher.Published);
     }
 
+    [Fact]
+    public async Task UpdateSubcategory_does_not_publish_when_subcategory_is_not_mutated()
+    {
+        var operations = new List<string>();
+        var repository = new CapturingCategoryRepository(operations) { MutationResult = false };
+        var publisher = new CapturingEventPublisher(operations);
+        var handler = new UpdateSubcategoryCommandHandler(repository);
+        var command = new UpdateSubcategory(CategoryId, SubcategoryId, UserId, "Bonus", 5);
+
+        await handler.Handle(command, publisher, CancellationToken.None);
+
+        Assert.Equal(["update-subcategory"], operations);
+        Assert.Empty(publisher.Published);
+    }
+
     private sealed class CapturingCategoryRepository(List<string> operations) : ICategoryRepository
     {
         public bool MutationResult { get; set; } = true;
@@ -112,6 +148,7 @@ public class CategoryCommandHandlerTests
         public (Guid Id, Guid UserId, string Name, int SortOrder)? UpdatedCategory { get; private set; }
         public (Guid Id, Guid UserId)? DeletedCategory { get; private set; }
         public (Guid Id, Guid CategoryId, Guid UserId, string Name, int SortOrder)? CreatedSubcategory { get; private set; }
+        public (Guid CategoryId, Guid Id, Guid UserId, string Name, int SortOrder)? UpdatedSubcategory { get; private set; }
         public (Guid CategoryId, Guid Id, Guid UserId)? DeletedSubcategory { get; private set; }
 
         public Task CreateAsync(
@@ -158,6 +195,19 @@ public class CategoryCommandHandlerTests
         {
             operations.Add("create-subcategory");
             CreatedSubcategory = (id, categoryId, userId, name, sortOrder);
+            return Task.FromResult(MutationResult);
+        }
+
+        public Task<bool> UpdateSubcategoryAsync(
+            Guid categoryId,
+            Guid id,
+            Guid userId,
+            string name,
+            int sortOrder,
+            CancellationToken ct = default)
+        {
+            operations.Add("update-subcategory");
+            UpdatedSubcategory = (categoryId, id, userId, name, sortOrder);
             return Task.FromResult(MutationResult);
         }
 

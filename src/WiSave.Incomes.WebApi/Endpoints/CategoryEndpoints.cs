@@ -44,6 +44,12 @@ public sealed class CategoryEndpoints : IEndpointModule
                 "Create an income subcategory",
                 "Accepts an income subcategory creation command for the current user.");
 
+        group.MapPut("/{id:guid}/subcategories/{subId:guid}", UpdateSubcategory)
+            .ProducesAccepted(
+                "UpdateIncomeSubcategory",
+                "Update an income subcategory",
+                "Accepts an income subcategory update command for the current user.");
+
         group.MapDelete("/{id:guid}/subcategories/{subId:guid}", DeleteSubcategory)
             .ProducesAccepted(
                 "DeleteIncomeSubcategory",
@@ -92,6 +98,18 @@ public sealed class CategoryEndpoints : IEndpointModule
         var @command = new CreateSubcategory(subcategoryId, id, user.UserId, request.Name, request.SortOrder);
         await bus.SendAsync(@command);
         return Results.Accepted($"/incomes/categories/{id}/subcategories/{subcategoryId}", value: null);
+    }
+
+    private static async Task<IResult> UpdateSubcategory(
+        Guid id,
+        Guid subId,
+        [FromBody] CreateSubcategoryRequest request,
+        ICurrentUser user,
+        IMessageBus bus)
+    {
+        var @command = new UpdateSubcategory(id, subId, user.UserId, request.Name, request.SortOrder);
+        await bus.SendAsync(@command);
+        return Results.Accepted();
     }
 
     private static async Task<IResult> DeleteSubcategory(Guid id, Guid subId, ICurrentUser user, IMessageBus bus)
