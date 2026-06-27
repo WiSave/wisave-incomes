@@ -9,9 +9,16 @@ public sealed class CategoryUpdatedEventHandler(ProjectionsDbContext db)
     {
         var category = await db.Categories.FindAsync([@event.Id], ct);
 
-        if (category is null || category.UserId != @event.UserId)
+        if (category is null)
         {
-            return;
+            throw new InvalidOperationException(
+                $"Cannot apply {nameof(CategoryUpdated)} because category projection '{@event.Id}' was not found.");
+        }
+
+        if (category.UserId != @event.UserId)
+        {
+            throw new InvalidOperationException(
+                $"Cannot apply {nameof(CategoryUpdated)} because category projection '{@event.Id}' belongs to a different user.");
         }
 
         category.Name = @event.Name;
