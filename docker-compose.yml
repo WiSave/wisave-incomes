@@ -6,16 +6,14 @@ services:
       secrets:
         - nuget_config
     depends_on:
-      wisave-incomes-postgres-general:
-        condition: service_healthy
-      wisave-incomes-postgres-projections:
+      wisave-incomes-postgres:
         condition: service_healthy
     networks:
       - default
       - wisave-net
     environment:
-      - ConnectionStrings__General=Host=wisave-incomes-postgres-general;Database=wisave.incomes.general;Username=wisave;Password=wisave_dev
-      - ConnectionStrings__Projections=Host=wisave-incomes-postgres-projections;Database=wisave.incomes.projections;Username=wisave;Password=wisave_dev
+      - ConnectionStrings__General=Host=wisave-incomes-postgres;Database=wisave.incomes.general;Username=wisave;Password=wisave_dev
+      - ConnectionStrings__Projections=Host=wisave-incomes-postgres;Database=wisave.incomes.projections;Username=wisave;Password=wisave_dev
       - RabbitMq__Host=rabbitmq
       - RabbitMq__VirtualHost=incomes
       - RabbitMq__Username=guest
@@ -28,13 +26,11 @@ services:
       secrets:
         - nuget_config
     depends_on:
-      wisave-incomes-postgres-general:
-        condition: service_healthy
-      wisave-incomes-postgres-eventstore:
+      wisave-incomes-postgres:
         condition: service_healthy
     environment:
-      - ConnectionStrings__General=Host=wisave-incomes-postgres-general;Database=wisave.incomes.general;Username=wisave;Password=wisave_dev
-      - ConnectionStrings__EventStore=Host=wisave-incomes-postgres-eventstore;Database=wisave.incomes.eventstore;Username=wisave;Password=wisave_dev
+      - ConnectionStrings__General=Host=wisave-incomes-postgres;Database=wisave.incomes.general;Username=wisave;Password=wisave_dev
+      - ConnectionStrings__EventStore=Host=wisave-incomes-postgres;Database=wisave.incomes.eventstore;Username=wisave;Password=wisave_dev
       - RabbitMq__Host=rabbitmq
       - RabbitMq__VirtualHost=incomes
       - RabbitMq__Username=guest
@@ -50,13 +46,11 @@ services:
       secrets:
         - nuget_config
     depends_on:
-      wisave-incomes-postgres-general:
-        condition: service_healthy
-      wisave-incomes-postgres-projections:
+      wisave-incomes-postgres:
         condition: service_healthy
     environment:
-      - ConnectionStrings__General=Host=wisave-incomes-postgres-general;Database=wisave.incomes.general;Username=wisave;Password=wisave_dev
-      - ConnectionStrings__Projections=Host=wisave-incomes-postgres-projections;Database=wisave.incomes.projections;Username=wisave;Password=wisave_dev
+      - ConnectionStrings__General=Host=wisave-incomes-postgres;Database=wisave.incomes.general;Username=wisave;Password=wisave_dev
+      - ConnectionStrings__Projections=Host=wisave-incomes-postgres;Database=wisave.incomes.projections;Username=wisave;Password=wisave_dev
       - RabbitMq__Host=rabbitmq
       - RabbitMq__VirtualHost=incomes
       - RabbitMq__Username=guest
@@ -65,58 +59,25 @@ services:
       - default
       - wisave-net
 
-  wisave-incomes-postgres-general:
+  wisave-incomes-postgres:
     image: postgres:17
     ports:
       - "5438:5432"
     environment:
-      - POSTGRES_DB=wisave.incomes.general
+      - POSTGRES_DB=postgres
       - POSTGRES_USER=wisave
       - POSTGRES_PASSWORD=wisave_dev
     volumes:
-      - incomes-general-db:/var/lib/postgresql/data
+      - incomes-postgres-db:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U wisave -d 'wisave.incomes.general'"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  wisave-incomes-postgres-projections:
-    image: postgres:17
-    ports:
-      - "5440:5432"
-    environment:
-      - POSTGRES_DB=wisave.incomes.projections
-      - POSTGRES_USER=wisave
-      - POSTGRES_PASSWORD=wisave_dev
-    volumes:
-      - incomes-projections-db:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U wisave -d 'wisave.incomes.projections'"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  wisave-incomes-postgres-eventstore:
-    image: postgres:17
-    ports:
-      - "5439:5432"
-    environment:
-      - POSTGRES_DB=wisave.incomes.eventstore
-      - POSTGRES_USER=wisave
-      - POSTGRES_PASSWORD=wisave_dev
-    volumes:
-      - incomes-eventstore-db:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U wisave -d 'wisave.incomes.eventstore'"]
+      test: ["CMD-SHELL", "pg_isready -U wisave -d 'wisave.incomes.general' && pg_isready -U wisave -d 'wisave.incomes.eventstore' && pg_isready -U wisave -d 'wisave.incomes.projections'"]
       interval: 5s
       timeout: 5s
       retries: 5
 
 volumes:
-  incomes-general-db:
-  incomes-projections-db:
-  incomes-eventstore-db:
+  incomes-postgres-db:
 
 networks:
   default:
