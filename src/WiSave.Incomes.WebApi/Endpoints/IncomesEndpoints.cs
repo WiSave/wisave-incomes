@@ -12,11 +12,35 @@ public sealed class IncomesEndpoints : IEndpointModule
     {
         var group = app.MapGroup("/incomes").WithTags("Incomes");
 
-        group.MapGet("/", GetAll);
-        group.MapPost("/", Create);
-        group.MapGet("/{id:guid}", GetById);
-        group.MapPut("/{id:guid}", Update);
-        group.MapDelete("/{id:guid}", Delete);
+        group.MapGet("/", GetAll)
+            .ProducesOk(
+                "ListIncomes",
+                "List incomes",
+                "Returns incomes for the current user.");
+
+        group.MapPost("/", Create)
+            .ProducesOk(
+                "CreateIncome",
+                "Create an income",
+                "Creates an income for the current user.");
+
+        group.MapGet("/{id:guid}", GetById)
+            .ProducesOk(
+                "GetIncome",
+                "Get an income",
+                "Returns a single income for the current user.");
+
+        group.MapPut("/{id:guid}", Update)
+            .ProducesOk(
+                "UpdateIncome",
+                "Update an income",
+                "Updates an income for the current user.");
+
+        group.MapDelete("/{id:guid}", Delete)
+            .ProducesOk(
+                "DeleteIncome",
+                "Delete an income",
+                "Deletes an income for the current user.");
     }
 
     private static IResult GetAll() => Results.StatusCode(200);

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Routing;
@@ -263,6 +264,38 @@ public class CategoryEndpointsTests : IAsyncLifetime
         Assert.Equal(requestType, acceptsMetadata.RequestType);
     }
 
+    [Theory]
+    [InlineData("GET", "/incomes", StatusCodes.Status200OK, null)]
+    [InlineData("POST", "/incomes", StatusCodes.Status200OK, null)]
+    [InlineData("GET", "/incomes/{id:guid}", StatusCodes.Status200OK, null)]
+    [InlineData("PUT", "/incomes/{id:guid}", StatusCodes.Status200OK, null)]
+    [InlineData("DELETE", "/incomes/{id:guid}", StatusCodes.Status200OK, null)]
+    [InlineData("GET", "/incomes/categories", StatusCodes.Status200OK, typeof(GetCategoriesResponse))]
+    [InlineData("POST", "/incomes/categories", StatusCodes.Status201Created, null)]
+    [InlineData("PUT", "/incomes/categories/{id:guid}", StatusCodes.Status200OK, null)]
+    [InlineData("DELETE", "/incomes/categories/{id:guid}", StatusCodes.Status200OK, null)]
+    [InlineData("POST", "/incomes/categories/{id:guid}/subcategories", StatusCodes.Status201Created, null)]
+    [InlineData("DELETE", "/incomes/categories/{id:guid}/subcategories/{subId:guid}", StatusCodes.Status200OK, null)]
+    public void Endpoints_document_openapi_response_contracts(
+        string method,
+        string routePattern,
+        int statusCode,
+        Type? responseType)
+    {
+        var endpoint = FindEndpoint(method, routePattern);
+
+        var responseMetadata = endpoint.Metadata
+            .GetOrderedMetadata<IProducesResponseTypeMetadata>()
+            .SingleOrDefault(metadata => metadata.StatusCode == statusCode);
+
+        Assert.NotNull(responseMetadata);
+
+        if (responseType is not null)
+        {
+            Assert.Equal(responseType, responseMetadata.Type);
+        }
+    }
+
     private static string NormalizeRoutePattern(string? routePattern)
     {
         if (string.IsNullOrWhiteSpace(routePattern))
@@ -284,6 +317,17 @@ public class CategoryEndpointsTests : IAsyncLifetime
         }
 
         return request;
+    }
+
+    private RouteEndpoint FindEndpoint(string method, string routePattern)
+    {
+        return _app.Services
+            .GetRequiredService<EndpointDataSource>()
+            .Endpoints
+            .OfType<RouteEndpoint>()
+            .Single(e =>
+                NormalizeRoutePattern(e.RoutePattern.RawText) == routePattern &&
+                e.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods.Contains(method) == true);
     }
 
     private sealed record EndpointCase(
