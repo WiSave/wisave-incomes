@@ -46,4 +46,4 @@ jobs:
         run: dotnet list ${{ env.SOLUTION }} package --outdated --include-transitive --configfile NuGet.config
 
       - name: Enforce NuGet vulnerability policy
-        run: dotnet restore ${{ env.SOLUTION }} --configfile NuGet.config -p:NuGetAudit=true -p:NuGetAuditMode=all -p:NuGetAuditLevel=moderate '-p:WarningsAsErrors=NU1902;NU1903;NU1904'
+        run: dotnet restore ${{ env.SOLUTION }} --configfile NuGet.config -p:NuGetAudit=true -p:NuGetAuditMode=all -p:NuGetAuditLevel=moderate -p:WarningsAsErrors=NU1902%3BNU1903%3BNU1904
