@@ -40,4 +40,17 @@ internal static class OpenApiEndpointExtensions
             .WithDescription(description)
             .Produces(StatusCodes.Status201Created);
     }
+
+    public static RouteHandlerBuilder ProducesAccepted(
+        this RouteHandlerBuilder builder,
+        string name,
+        string summary,
+        string description)
+    {
+        return builder
+            .WithName(name)
+            .WithSummary(summary)
+            .WithDescription(description)
+            .Produces(StatusCodes.Status202Accepted);
+    }
 }

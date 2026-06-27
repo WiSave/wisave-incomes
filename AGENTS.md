@@ -1,27 +1,43 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
+## Environment & Commands
 
-This is a .NET solution for the WiSave Incomes service. Production code lives under `src/`, with separate projects for API, console tooling, workers, contracts, domain/application layers, infrastructure, projections, and migrations. Tests live under `tests/` and mirror the project they validate, for example `tests/WiSave.Incomes.WebApi.Tests` and `tests/WiSave.Incomes.Core.Application.Tests`. Docker entrypoints are defined by `Dockerfile.WebApi`, `Dockerfile.Worker.Domain`, and `Dockerfile.Worker.Projections`; local service dependencies are in `docker-compose.yml`.
+Work from the repository root. The solution targets `net10.0` with nullable reference types, implicit usings, centralized package versions, and code style enforcement enabled in `Directory.Build.props` and `Directory.Packages.props`.
 
-## Build, Test, and Development Commands
+Prefer scoped commands while iterating, then run broader validation when the change crosses project boundaries:
 
 - `dotnet restore WiSave.Incomes.slnx` restores all solution packages.
+- `dotnet build src/WiSave.Incomes.WebApi/WiSave.Incomes.WebApi.csproj` builds a single project for fast feedback; substitute the touched project as needed.
+- `dotnet test tests/WiSave.Incomes.WebApi.Tests/WiSave.Incomes.WebApi.Tests.csproj --filter FullyQualifiedName~CategoryEndpointsTests` runs a focused test class or method; substitute the matching test project and filter.
 - `dotnet build WiSave.Incomes.slnx` builds all projects with warnings treated as errors.
-- `dotnet test WiSave.Incomes.slnx` runs the xUnit test suite.
+- `dotnet test WiSave.Incomes.slnx` runs the full xUnit test suite.
 - `dotnet run --project src/WiSave.Incomes.WebApi/WiSave.Incomes.WebApi.csproj` starts the web API locally.
 - `dotnet run --project src/WiSave.Incomes.Console/WiSave.Incomes.Console.csproj -- <command>` runs console maintenance commands.
 - `docker compose up --build` starts the API, workers, PostgreSQL databases, and RabbitMQ-backed wiring expected by the compose file.
 
+## Project Structure & Module Organization
+
+This is a .NET solution for the WiSave Incomes service. Production code lives under `src/`, with separate projects for API, console tooling, workers, contracts, domain/application layers, infrastructure, projections, and migrations. Tests live under `tests/` and mirror the project they validate, for example `tests/WiSave.Incomes.WebApi.Tests` and `tests/WiSave.Incomes.Core.Application.Tests`. Docker entrypoints are defined by `Dockerfile.WebApi`, `Dockerfile.Worker.Domain`, and `Dockerfile.Worker.Projections`; local service dependencies are in `docker-compose.yml`.
+
 ## Coding Style & Naming Conventions
 
-Projects target `net10.0` with nullable reference types, implicit usings, centralized package versions, and code style enforcement enabled in `Directory.Build.props` and `Directory.Packages.props`. Follow standard C# naming: PascalCase for types, methods, records, and public members; camelCase for locals and parameters; interfaces prefixed with `I`. Keep namespace and folder names aligned with the owning project area, such as `Authorization`, `Endpoints`, `Postgres`, or `Handlers`.
+Follow standard C# naming: PascalCase for types, methods, records, and public members; camelCase for locals and parameters; interfaces prefixed with `I`. Keep namespace and folder names aligned with the owning project area, such as `Authorization`, `Endpoints`, `Postgres`, or `Handlers`. Prefer the repository's existing patterns and helper APIs over introducing new abstractions.
 
 ## Testing Guidelines
 
 Tests use xUnit with `Microsoft.NET.Test.Sdk` and `coverlet.collector`. Place new tests in the matching project under `tests/`, and name test classes after the subject, e.g. `CategoryEndpointsTests` or `CreateIncomeCommandHandlerTests`. Use `[Fact]` for single scenarios and `[Theory]` for parameterized cases. Prefer focused tests around handlers, endpoints, repositories, authorization, and EF model configuration.
 
 Treat most tests created only to drive TDD or to reproduce an implementation issue as temporary working artifacts. Do not persist low-value, implementation-coupled tests in the final change just because they helped during development. Before keeping agent-created tests in the final diff, ask the user whether they should be persisted; default to not persisting them unless the user explicitly approves. Keep tests when they protect meaningful business behavior, public contracts, regressions with real risk, authorization/security rules, persistence mappings, or integration boundaries; otherwise remove the temporary test before finishing.
+
+## Agent Operating Boundaries
+
+Keep diffs focused on the requested change. Do not install or update NuGet packages, create or apply migrations, rewrite Docker configuration, delete files, or perform git commit/push operations unless the user explicitly asks for that work. If the working tree already contains unrelated changes, leave them intact and work around them.
+
+## Architecture Decisions
+
+The `WiSave.Incomes.Core.Domain` project currently references `WiSave.Incomes.Contracts` and may raise events from the published contracts package directly. This is an accepted tradeoff for this service at its current size. Do not refactor this dependency into separate internal domain events and integration-event mappings unless the user explicitly asks for that architectural change.
+
+Category management is intentionally simple layered CRUD, not a DDD aggregate model. Avoid refactoring categories into rich domain objects, aggregate repositories, or complex invariant modeling unless the user explicitly asks for that. Keep the category layers pragmatic so they support income work without adding unnecessary domain ceremony.
 
 ## Commit & Pull Request Guidelines
 

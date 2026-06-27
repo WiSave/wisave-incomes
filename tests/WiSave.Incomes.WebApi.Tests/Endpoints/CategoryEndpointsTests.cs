@@ -55,7 +55,7 @@ public class CategoryEndpointsTests : IAsyncLifetime
     {
         var cases = new[]
         {
-            new EndpointCase(HttpMethod.Post, "/incomes", """{"amount":{"amount":100,"currency":0},"incomeDate":"2026-06-21","name":"Salary","description":null,"userId":"018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234","tags":[]}"""),
+            new EndpointCase(HttpMethod.Post, "/incomes", """{"amount":{"amount":100,"currency":0},"incomeDate":"2026-06-21","name":"Salary","description":null,"userId":"018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234","tags":[]}""", HttpStatusCode.Accepted),
             new EndpointCase(HttpMethod.Get, "/incomes"),
             new EndpointCase(HttpMethod.Get, "/incomes/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234"),
             new EndpointCase(HttpMethod.Put, "/incomes/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234", """{"amount":{"amount":100,"currency":0},"incomeDate":"2026-06-21","name":"Salary","description":null,"tags":[]}"""),
@@ -64,15 +64,15 @@ public class CategoryEndpointsTests : IAsyncLifetime
                 HttpMethod.Post,
                 "/incomes/categories",
                 """{"name":"Salary"}""",
-                HttpStatusCode.Created),
-            new EndpointCase(HttpMethod.Put, "/incomes/categories/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234", """{"name":"Salary"}"""),
-            new EndpointCase(HttpMethod.Delete, "/incomes/categories/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234"),
+                HttpStatusCode.Accepted),
+            new EndpointCase(HttpMethod.Put, "/incomes/categories/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234", """{"name":"Salary"}""", HttpStatusCode.Accepted),
+            new EndpointCase(HttpMethod.Delete, "/incomes/categories/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234", ExpectedStatus: HttpStatusCode.Accepted),
             new EndpointCase(
                 HttpMethod.Post,
                 "/incomes/categories/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234/subcategories",
                 """{"name":"Base pay"}""",
-                HttpStatusCode.Created),
-            new EndpointCase(HttpMethod.Delete, "/incomes/categories/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234/subcategories/118f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234"),
+                HttpStatusCode.Accepted),
+            new EndpointCase(HttpMethod.Delete, "/incomes/categories/018f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234/subcategories/118f7e8d-7b41-7c3a-9f0d-0b5e6a8c1234", ExpectedStatus: HttpStatusCode.Accepted),
         };
 
         foreach (var endpointCase in cases)
@@ -107,7 +107,7 @@ public class CategoryEndpointsTests : IAsyncLifetime
 
         using var response = await _client.SendAsync(request);
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         var bus = _app.Services.GetRequiredService<CapturingMessageBus>();
         var command = Assert.IsType<CreateIncomeCommand>(bus.Sent);
         Assert.Equal(categoryId, command.CategoryId);
@@ -153,7 +153,7 @@ public class CategoryEndpointsTests : IAsyncLifetime
 
         using var response = await _client.SendAsync(request);
 
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         var bus = _app.Services.GetRequiredService<CapturingMessageBus>();
         Assert.Null(bus.Published);
         var command = Assert.IsType<CreateCategory>(bus.Sent);
@@ -175,7 +175,7 @@ public class CategoryEndpointsTests : IAsyncLifetime
 
         using var response = await _client.SendAsync(request);
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         Assert.Empty(await response.Content.ReadAsStringAsync());
         var bus = _app.Services.GetRequiredService<CapturingMessageBus>();
         var command = Assert.IsType<UpdateCategory>(bus.Sent);
@@ -192,7 +192,7 @@ public class CategoryEndpointsTests : IAsyncLifetime
 
         using var response = await _client.DeleteAsync($"/incomes/categories/{categoryId}");
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         Assert.Empty(await response.Content.ReadAsStringAsync());
         var bus = _app.Services.GetRequiredService<CapturingMessageBus>();
         var command = Assert.IsType<DeleteCategory>(bus.Sent);
@@ -211,7 +211,7 @@ public class CategoryEndpointsTests : IAsyncLifetime
 
         using var response = await _client.SendAsync(request);
 
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         var bus = _app.Services.GetRequiredService<CapturingMessageBus>();
         var command = Assert.IsType<CreateSubcategory>(bus.Sent);
         Assert.NotEqual(Guid.Empty, command.Id);
@@ -230,7 +230,7 @@ public class CategoryEndpointsTests : IAsyncLifetime
 
         using var response = await _client.DeleteAsync($"/incomes/categories/{categoryId}/subcategories/{subcategoryId}");
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         Assert.Empty(await response.Content.ReadAsStringAsync());
         var bus = _app.Services.GetRequiredService<CapturingMessageBus>();
         var command = Assert.IsType<DeleteSubcategory>(bus.Sent);
@@ -266,16 +266,16 @@ public class CategoryEndpointsTests : IAsyncLifetime
 
     [Theory]
     [InlineData("GET", "/incomes", StatusCodes.Status200OK, null)]
-    [InlineData("POST", "/incomes", StatusCodes.Status200OK, null)]
+    [InlineData("POST", "/incomes", StatusCodes.Status202Accepted, null)]
     [InlineData("GET", "/incomes/{id:guid}", StatusCodes.Status200OK, null)]
     [InlineData("PUT", "/incomes/{id:guid}", StatusCodes.Status200OK, null)]
     [InlineData("DELETE", "/incomes/{id:guid}", StatusCodes.Status200OK, null)]
     [InlineData("GET", "/incomes/categories", StatusCodes.Status200OK, typeof(GetCategoriesResponse))]
-    [InlineData("POST", "/incomes/categories", StatusCodes.Status201Created, null)]
-    [InlineData("PUT", "/incomes/categories/{id:guid}", StatusCodes.Status200OK, null)]
-    [InlineData("DELETE", "/incomes/categories/{id:guid}", StatusCodes.Status200OK, null)]
-    [InlineData("POST", "/incomes/categories/{id:guid}/subcategories", StatusCodes.Status201Created, null)]
-    [InlineData("DELETE", "/incomes/categories/{id:guid}/subcategories/{subId:guid}", StatusCodes.Status200OK, null)]
+    [InlineData("POST", "/incomes/categories", StatusCodes.Status202Accepted, null)]
+    [InlineData("PUT", "/incomes/categories/{id:guid}", StatusCodes.Status202Accepted, null)]
+    [InlineData("DELETE", "/incomes/categories/{id:guid}", StatusCodes.Status202Accepted, null)]
+    [InlineData("POST", "/incomes/categories/{id:guid}/subcategories", StatusCodes.Status202Accepted, null)]
+    [InlineData("DELETE", "/incomes/categories/{id:guid}/subcategories/{subId:guid}", StatusCodes.Status202Accepted, null)]
     public void Endpoints_document_openapi_response_contracts(
         string method,
         string routePattern,

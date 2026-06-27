@@ -10,9 +10,16 @@ public sealed class SubcategoryCreatedEventHandler(ProjectionsDbContext db)
     {
         var category = await db.Categories.FindAsync([@event.CategoryId], ct);
 
-        if (category is null || category.UserId != @event.UserId)
+        if (category is null)
         {
-            return;
+            throw new InvalidOperationException(
+                $"Cannot apply {nameof(SubcategoryCreated)} because category projection '{@event.CategoryId}' was not found.");
+        }
+
+        if (category.UserId != @event.UserId)
+        {
+            throw new InvalidOperationException(
+                $"Cannot apply {nameof(SubcategoryCreated)} because category projection '{@event.CategoryId}' belongs to a different user.");
         }
 
         var subcategory = category.Subcategories.SingleOrDefault(x => x.Id == @event.Id);
