@@ -88,6 +88,35 @@ public sealed class CategoryRepository(IncomesDbContext db) : ICategoryRepositor
         return true;
     }
 
+    public async Task<bool> UpdateSubcategoryAsync(
+        Guid categoryId,
+        Guid id,
+        Guid userId,
+        string name,
+        int sortOrder,
+        CancellationToken ct = default)
+    {
+        var category = await db.Categories.FindAsync([categoryId], ct);
+
+        if (category is null || category.UserId != userId)
+        {
+            return false;
+        }
+
+        var subcategory = await db.Subcategories.FindAsync([id], ct);
+
+        if (subcategory is null || subcategory.CategoryId != categoryId)
+        {
+            return false;
+        }
+
+        subcategory.Name = name;
+        subcategory.SortOrder = sortOrder;
+
+        await db.SaveChangesAsync(ct);
+        return true;
+    }
+
     public async Task<bool> DeleteSubcategoryAsync(
         Guid categoryId,
         Guid id,

@@ -176,6 +176,95 @@ public class CategoryEventHandlerTests
     }
 
     [Fact]
+    public async Task SubcategoryUpdated_updates_subcategory_projection()
+    {
+        await using var db = CreateDbContext();
+        db.Categories.Add(new CategoryEntity
+        {
+            Id = CategoryId,
+            UserId = UserId,
+            Name = "Salary",
+            SortOrder = 1,
+            Subcategories =
+            [
+                new SubcategoryEntity
+                {
+                    Id = SubcategoryId,
+                    Name = "Base pay",
+                    SortOrder = 2
+                }
+            ]
+        });
+        await db.SaveChangesAsync();
+
+        var handler = new SubcategoryUpdatedEventHandler(db);
+
+        await handler.Handle(new SubcategoryUpdated(CategoryId, SubcategoryId, UserId, "Bonus", 5), CancellationToken.None);
+
+        var category = Assert.Single(await db.Categories.ToListAsync());
+        var subcategory = Assert.Single(category.Subcategories);
+        Assert.Equal(SubcategoryId, subcategory.Id);
+        Assert.Equal("Bonus", subcategory.Name);
+        Assert.Equal(5, subcategory.SortOrder);
+    }
+
+    [Fact]
+    public async Task SubcategoryUpdated_throws_when_parent_category_projection_is_missing()
+    {
+        await using var db = CreateDbContext();
+        var handler = new SubcategoryUpdatedEventHandler(db);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            handler.Handle(new SubcategoryUpdated(CategoryId, SubcategoryId, UserId, "Bonus", 5), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task SubcategoryUpdated_throws_when_parent_category_projection_belongs_to_another_user()
+    {
+        await using var db = CreateDbContext();
+        db.Categories.Add(new CategoryEntity
+        {
+            Id = CategoryId,
+            UserId = OtherUserId,
+            Name = "Salary",
+            SortOrder = 1,
+            Subcategories =
+            [
+                new SubcategoryEntity
+                {
+                    Id = SubcategoryId,
+                    Name = "Base pay",
+                    SortOrder = 2
+                }
+            ]
+        });
+        await db.SaveChangesAsync();
+        var handler = new SubcategoryUpdatedEventHandler(db);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            handler.Handle(new SubcategoryUpdated(CategoryId, SubcategoryId, UserId, "Bonus", 5), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task SubcategoryUpdated_throws_when_subcategory_projection_is_missing()
+    {
+        await using var db = CreateDbContext();
+        db.Categories.Add(new CategoryEntity
+        {
+            Id = CategoryId,
+            UserId = UserId,
+            Name = "Salary",
+            SortOrder = 1,
+            Subcategories = []
+        });
+        await db.SaveChangesAsync();
+        var handler = new SubcategoryUpdatedEventHandler(db);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            handler.Handle(new SubcategoryUpdated(CategoryId, SubcategoryId, UserId, "Bonus", 5), CancellationToken.None));
+    }
+
+    [Fact]
     public async Task SubcategoryDeleted_removes_subcategory_projection()
     {
         await using var db = CreateDbContext();
