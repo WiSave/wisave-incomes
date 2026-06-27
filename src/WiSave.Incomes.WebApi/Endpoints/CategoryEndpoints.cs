@@ -14,12 +14,41 @@ public sealed class CategoryEndpoints : IEndpointModule
     {
         var group = app.MapGroup("/incomes/categories").WithTags("Categories");
 
-        group.MapGet("/", GetAll);
-        group.MapPost("/", Create);
-        group.MapPut("/{id:guid}", Update);
-        group.MapDelete("/{id:guid}", Delete);
-        group.MapPost("/{id:guid}/subcategories", CreateSubcategory);
-        group.MapDelete("/{id:guid}/subcategories/{subId:guid}", DeleteSubcategory);
+        group.MapGet("/", GetAll)
+            .ProducesOk<GetCategoriesResponse>(
+                "ListIncomeCategories",
+                "List income categories",
+                "Returns income categories and subcategories for the current user.");
+
+        group.MapPost("/", Create)
+            .ProducesCreated(
+                "CreateIncomeCategory",
+                "Create an income category",
+                "Creates an income category for the current user and returns its location.");
+
+        group.MapPut("/{id:guid}", Update)
+            .ProducesOk(
+                "UpdateIncomeCategory",
+                "Update an income category",
+                "Updates an income category for the current user.");
+
+        group.MapDelete("/{id:guid}", Delete)
+            .ProducesOk(
+                "DeleteIncomeCategory",
+                "Delete an income category",
+                "Deletes an income category for the current user.");
+
+        group.MapPost("/{id:guid}/subcategories", CreateSubcategory)
+            .ProducesCreated(
+                "CreateIncomeSubcategory",
+                "Create an income subcategory",
+                "Creates an income subcategory for the current user and returns its location.");
+
+        group.MapDelete("/{id:guid}/subcategories/{subId:guid}", DeleteSubcategory)
+            .ProducesOk(
+                "DeleteIncomeSubcategory",
+                "Delete an income subcategory",
+                "Deletes an income subcategory for the current user.");
     }
 
     private static async Task<IResult> GetAll(ICurrentUser user, IMessageBus bus, CancellationToken ct)
