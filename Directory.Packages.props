@@ -24,8 +24,8 @@
     <PackageVersion Include="WiSave.Framework.Domain" Version="1.0.5" />
     <PackageVersion Include="WiSave.Framework.EventSourcing" Version="1.0.5" />
     <PackageVersion Include="WiSave.Framework.EventSourcing.Marten" Version="1.0.5" />
-    <PackageVersion Include="WolverineFx.RabbitMQ" Version="6.14.0" />
-    <PackageVersion Include="WolverineFx.RuntimeCompilation" Version="6.14.0" />
+    <PackageVersion Include="WolverineFx.RabbitMQ" Version="6.16.0" />
+    <PackageVersion Include="WolverineFx.RuntimeCompilation" Version="6.16.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
   </ItemGroup>
