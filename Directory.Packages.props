@@ -18,7 +18,7 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.10.85" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.16.6" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.16.7" />
     <PackageVersion Include="WiSave.Console" Version="1.0.0" />
     <PackageVersion Include="WiSave.Framework.Application" Version="1.0.5" />
     <PackageVersion Include="WiSave.Framework.Domain" Version="1.0.5" />
